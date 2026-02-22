@@ -1,10 +1,15 @@
 FROM collabora/code:latest
 
-# Collabora needs MKNOD capability — Render supports this
-# SSL is disabled since Render handles HTTPS termination at their edge
+# SSL disabled — Render handles HTTPS termination at their edge
+# Config is passed via environment variables (correct method for this image)
 
 EXPOSE 9980
 
-# Render sets PORT env var — Collabora uses 9980 internally
-# aliasgroup1 is set via Render environment variable
-CMD ["/bin/bash", "-c", "/start-collabora-online.sh --o:ssl.enable=false --o:ssl.termination=true --o:net.post_allow.host[0]=.* --o:storage.wopi.alias_groups[@allow]=.* --o:logging.level=warning"]
+ENV username=admin
+ENV password=admin
+ENV domain=.*
+ENV ssl_enabled=false
+ENV ssl_termination=true
+ENV extra_params=--o:ssl.enable=false
+
+CMD ["/start-collabora-online.sh"]
