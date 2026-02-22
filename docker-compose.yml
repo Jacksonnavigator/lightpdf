@@ -1,0 +1,74 @@
+version: "3.8"
+
+services:
+
+  # ── Node.js Backend ──────────────────────────────────────────────────────────
+  backend:
+    build: ./backend
+    container_name: pdf-backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - BASE_URL=http://YOUR_IP:3000          # ← REPLACE YOUR_IP
+      - COLLABORA_URL=http://YOUR_IP:9980     # ← REPLACE YOUR_IP
+      - DATA_DIR=/data
+      - CONVERT_MODE=docker
+      - LIBREOFFICE_CONTAINER=pdf-libreoffice
+    volumes:
+      - ./data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - libreoffice
+    networks:
+      - pdf-net
+
+  # ── LibreOffice (PDF ↔ DOCX conversion) ─────────────────────────────────────
+  libreoffice:
+    image: linuxserver/libreoffice:latest
+    container_name: pdf-libreoffice
+    restart: unless-stopped
+    volumes:
+      - ./data:/data
+    networks:
+      - pdf-net
+
+  # ── Collabora Online (Word-like editor, replaces OnlyOffice) ─────────────────
+  # Only needs ~400MB RAM vs OnlyOffice's 2GB
+  collabora:
+    image: collabora/code:latest
+    container_name: pdf-collabora
+    restart: unless-stopped
+    ports:
+      - "9980:9980"
+    environment:
+      - aliasgroup1=http://YOUR_IP:3000       # ← REPLACE YOUR_IP
+      - DONT_GEN_SSL_CERT=YES
+      - extra_params=--o:ssl.enable=false --o:ssl.termination=false
+    cap_add:
+      - MKNOD
+    networks:
+      - pdf-net
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # ── React Frontend ────────────────────────────────────────────────────────────
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        - VITE_API_URL=                        # Empty = use relative URLs via nginx proxy
+    container_name: pdf-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+      - collabora
+    networks:
+      - pdf-net
+
+networks:
+  pdf-net:
+    driver: bridge
