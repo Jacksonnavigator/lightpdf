@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Deploy on Render – Step by Step</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',Arial,sans-serif;background:#f0f4f8;color:#1a202c}
+  .hero{background:linear-gradient(135deg,#46e891,#59a4f7,#4648f5);padding:44px 40px;text-align:center;color:white}
+  .hero h1{font-size:2rem;font-weight:800}
+  .hero p{margin-top:8px;opacity:.92;font-size:1rem}
+  .badges{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+  .badge{background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.4);border-radius:20px;padding:4px 14px;font-size:.8rem}
+  .container{max-width:820px;margin:0 auto;padding:36px 20px}
+  .step-card{background:white;border-radius:14px;margin-bottom:24px;box-shadow:0 2px 10px rgba(0,0,0,.07);overflow:hidden}
+  .step-header{display:flex;align-items:center;gap:14px;padding:20px 26px;border-bottom:1px solid #f0f0f0}
+  .step-num{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.1rem;color:white;flex-shrink:0}
+  .step-body{padding:22px 26px}
+  .step-title{font-size:1.1rem;font-weight:700}
+  .step-sub{font-size:.83rem;color:#718096;margin-top:2px}
+  .s1 .step-num{background:#6366f1}
+  .s2 .step-num{background:#f59e0b;color:#1a1a1a}
+  .s3 .step-num{background:#10b981}
+  .s4 .step-num{background:#3b82f6}
+  .s5 .step-num{background:#8b5cf6}
+  .s6 .step-num{background:#ef4444}
+  pre{background:#0f172a;color:#e2e8f0;border-radius:10px;padding:15px 18px;font-size:.82rem;line-height:1.75;overflow-x:auto;margin:12px 0;font-family:'Courier New',Consolas,monospace}
+  .lbl{display:inline-block;background:#1e293b;color:#4ade80;font-size:.68rem;font-weight:700;padding:2px 9px;border-radius:4px;margin-bottom:6px;letter-spacing:.5px;text-transform:uppercase}
+  .c{color:#475569} .g{color:#4ade80} .y{color:#fbbf24} .b{color:#60a5fa} .r{color:#f87171} .w{color:white}
+  .info{border-radius:10px;padding:13px 16px;margin:13px 0;font-size:.87rem;line-height:1.6;display:flex;gap:10px}
+  .info .ic{font-size:1.15rem;flex-shrink:0;margin-top:1px}
+  .tip{background:#f0fff4;border:1px solid #86efac;color:#166534}
+  .warn{background:#fffbeb;border:1px solid #fcd34d;color:#92400e}
+  .note{background:#eff6ff;border:1px solid #93c5fd;color:#1e40af}
+  .err{background:#fff1f2;border:1px solid #fca5a5;color:#991b1b}
+  p{line-height:1.65;margin-bottom:10px;font-size:.91rem}
+  h3{font-size:.97rem;font-weight:700;margin:16px 0 7px;color:#1e293b}
+  h4{font-size:.9rem;font-weight:600;margin:12px 0 5px;color:#374151}
+  ul.pl{padding-left:18px} ul.pl li{margin-bottom:6px;font-size:.9rem;line-height:1.55}
+  .screen{background:#f8fafc;border:2px dashed #cbd5e1;border-radius:10px;padding:16px 18px;margin:12px 0;font-size:.86rem;color:#475569}
+  .screen strong{display:block;color:#1e293b;margin-bottom:4px;font-size:.92rem}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:.87rem}
+  th{background:#f1f5f9;padding:9px 14px;text-align:left;font-weight:700;border-bottom:2px solid #e2e8f0}
+  td{padding:9px 14px;border-bottom:1px solid #f1f5f9}
+  tr:last-child td{border-bottom:none}
+  .tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.75rem;font-weight:700}
+  .tag-free{background:#dcfce7;color:#166534}
+  .tag-wait{background:#fef9c3;color:#854d0e}
+  .final{background:linear-gradient(135deg,#4648f5,#7c3aed);border-radius:14px;padding:30px;text-align:center;color:white;margin-top:8px}
+  .final h2{font-size:1.4rem;margin-bottom:8px}
+  .final p{color:rgba(255,255,255,.9);font-size:.93rem}
+  .step-inline{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid #f1f5f9}
+  .step-inline:last-child{border-bottom:none}
+  .num-circle{width:26px;height:26px;min-width:26px;border-radius:50%;background:#6366f1;color:white;font-size:.75rem;font-weight:800;display:flex;align-items:center;justify-content:center;margin-top:1px}
+  .env-row{display:grid;grid-template-columns:200px 1fr;gap:10px;align-items:start;padding:8px 0;border-bottom:1px solid #f1f5f9;font-size:.87rem}
+  .env-row:last-child{border-bottom:none}
+  .env-key{font-family:monospace;font-weight:700;color:#4338ca;background:#eef2ff;padding:3px 8px;border-radius:4px;font-size:.8rem}
+  .env-val{color:#374151}
+  @media(max-width:600px){.hero h1{font-size:1.5rem}.env-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>🚀 Deploy on Render — Complete Guide</h1>
+  <p>PDF Editor with Collabora · 3 services · Free tier</p>
+  <div class="badges">
+    <span class="badge">✅ No credit card needed</span>
+    <span class="badge">✅ ~20 minutes</span>
+    <span class="badge">✅ 3 steps: GitHub → Render → Done</span>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- Overview -->
+  <div class="step-card" style="border-top:4px solid #6366f1">
+    <div class="step-header">
+      <div class="step-num" style="background:#6366f1">📋</div>
+      <div><div class="step-title">Overview — What Gets Deployed</div><div class="step-sub">3 services, all free</div></div>
+    </div>
+    <div class="step-body">
+      <table>
+        <tr><th>Service</th><th>What it does</th><th>Plan</th></tr>
+        <tr><td><strong>pdf-backend</strong></td><td>Node.js API + LibreOffice (PDF↔DOCX conversion)</td><td><span class="tag tag-free">Free</span></td></tr>
+        <tr><td><strong>pdf-collabora</strong></td><td>Collabora Online — Word-like editor in the browser</td><td><span class="tag tag-free">Free</span></td></tr>
+        <tr><td><strong>pdf-frontend</strong></td><td>React app — the UI users see</td><td><span class="tag tag-free">Free</span></td></tr>
+      </table>
+      <div class="info warn">
+        <div class="ic">⚠️</div>
+        <div><strong>Free tier note:</strong> Render's free services sleep after 15 minutes of inactivity and take ~30 seconds to wake up on the first request. This is fine for personal use and demos. For always-on, upgrade to the $7/month plan later.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 1 — GitHub -->
+  <div class="step-card s1">
+    <div class="step-header">
+      <div class="step-num">1</div>
+      <div>
+        <div class="step-title">Push Your Code to GitHub</div>
+        <div class="step-sub">Render deploys directly from GitHub — this is how it works</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="info note">
+        <div class="ic">ℹ️</div>
+        <div>If you don't have a GitHub account, create one free at <strong>github.com</strong>. It only takes 2 minutes.</div>
+      </div>
+
+      <h3>A) Create a new GitHub repository</h3>
+      <div class="step-inline"><div class="num-circle">1</div><div>Go to <strong>github.com</strong> → click the <strong>"+"</strong> button top-right → <strong>"New repository"</strong></div></div>
+      <div class="step-inline"><div class="num-circle">2</div><div>Name it something like <code>pdf-editor</code></div></div>
+      <div class="step-inline"><div class="num-circle">3</div><div>Set it to <strong>Private</strong> (recommended) or Public</div></div>
+      <div class="step-inline"><div class="num-circle">4</div><div>Do <strong>NOT</strong> add README or .gitignore — keep it empty</div></div>
+      <div class="step-inline"><div class="num-circle">5</div><div>Click <strong>"Create repository"</strong></div></div>
+
+      <h3>B) Upload your code from your computer</h3>
+      <p>Open a terminal on your computer, navigate to the <strong>PdfRender</strong> folder from the zip you downloaded, and run:</p>
+
+      <div class="lbl">Terminal — Mac/Linux</div>
+      <pre><code><span class="c"># Navigate into the PdfRender folder</span>
+cd ~/Downloads/PdfRender
+
+<span class="c"># Initialize git and push to GitHub</span>
+git init
+git add .
+git commit -m <span class="g">"Initial commit — PDF editor with Collabora"</span>
+git branch -M main
+git remote add origin https://github.com/<span class="y">YOUR_USERNAME</span>/<span class="y">pdf-editor</span>.git
+git push -u origin main</code></pre>
+
+      <div class="lbl">Terminal — Windows PowerShell</div>
+      <pre><code><span class="c"># Navigate into the PdfRender folder</span>
+cd C:\Users\YourName\Downloads\PdfRender
+
+git init
+git add .
+git commit -m <span class="g">"Initial commit"</span>
+git branch -M main
+git remote add origin https://github.com/<span class="y">YOUR_USERNAME</span>/<span class="y">pdf-editor</span>.git
+git push -u origin main</code></pre>
+
+      <div class="info tip">
+        <div class="ic">💡</div>
+        <div>When asked for GitHub credentials, use your GitHub username and a <strong>Personal Access Token</strong> (not your password). Create one at: GitHub → Settings → Developer settings → Personal access tokens → Generate new token → select "repo" scope.</div>
+      </div>
+
+      <div class="screen">
+        <strong>✅ Success looks like:</strong>
+        After pushing, refresh your GitHub repository page — you should see all your files: <code>backend/</code>, <code>frontend/</code>, <code>collabora/</code>, <code>render.yaml</code>, etc.
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2 — Render Account -->
+  <div class="step-card s2">
+    <div class="step-header">
+      <div class="step-num">2</div>
+      <div>
+        <div class="step-title">Create Your Render Account & Connect GitHub</div>
+        <div class="step-sub">render.com — free, no credit card needed for free tier</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="step-inline"><div class="num-circle">1</div><div>Go to <strong>render.com</strong> → click <strong>"Get Started for Free"</strong></div></div>
+      <div class="step-inline"><div class="num-circle">2</div><div>Sign up using your <strong>GitHub account</strong> (easiest — click "GitHub" button)</div></div>
+      <div class="step-inline"><div class="num-circle">3</div><div>Authorize Render to access your GitHub</div></div>
+      <div class="step-inline"><div class="num-circle">4</div><div>You'll land on the Render <strong>Dashboard</strong> — a clean page with "New +" button at the top</div></div>
+
+      <div class="info tip">
+        <div class="ic">💡</div>
+        <div>Signing up with GitHub automatically links your repos — Render can see and deploy from them immediately.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 3 — Deploy Backend -->
+  <div class="step-card s3">
+    <div class="step-header">
+      <div class="step-num">3</div>
+      <div>
+        <div class="step-title">Deploy the Backend Service</div>
+        <div class="step-sub">Node.js + LibreOffice — the brain of your app</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="step-inline"><div class="num-circle">1</div><div>On Render Dashboard → click <strong>"New +"</strong> → <strong>"Web Service"</strong></div></div>
+      <div class="step-inline"><div class="num-circle">2</div><div>Click <strong>"Connect a repository"</strong> → select your <code>pdf-editor</code> GitHub repo → click <strong>"Connect"</strong></div></div>
+
+      <h3>Fill in these settings:</h3>
+      <table>
+        <tr><th>Field</th><th>Value</th></tr>
+        <tr><td><strong>Name</strong></td><td><code>pdf-backend</code></td></tr>
+        <tr><td><strong>Region</strong></td><td>Choose closest to you</td></tr>
+        <tr><td><strong>Branch</strong></td><td><code>main</code></td></tr>
+        <tr><td><strong>Runtime</strong></td><td><strong>Docker</strong></td></tr>
+        <tr><td><strong>Dockerfile Path</strong></td><td><code>./backend/Dockerfile</code></td></tr>
+        <tr><td><strong>Docker Context</strong></td><td><code>./backend</code></td></tr>
+        <tr><td><strong>Plan</strong></td><td><span class="tag tag-free">Free</span></td></tr>
+      </table>
+
+      <h3>⚠️ Add Environment Variables (scroll down on same page)</h3>
+      <p>Click <strong>"Advanced"</strong> → then <strong>"Add Environment Variable"</strong> for each one below:</p>
+
+      <div class="env-row"><div class="env-key">PORT</div><div class="env-val"><code>3000</code></div></div>
+      <div class="env-row"><div class="env-key">CONVERT_MODE</div><div class="env-val"><code>local</code> &nbsp;← very important, don't skip this</div></div>
+      <div class="env-row"><div class="env-key">DATA_DIR</div><div class="env-val"><code>/data</code></div></div>
+      <div class="env-row"><div class="env-key">CONVERT_TIMEOUT_MS</div><div class="env-val"><code>180000</code></div></div>
+      <div class="env-row"><div class="env-key">BASE_URL</div><div class="env-val">Leave blank for now — fill in after deploy (see Step 5)</div></div>
+      <div class="env-row"><div class="env-key">COLLABORA_URL</div><div class="env-val">Leave blank for now — fill in after deploy (see Step 5)</div></div>
+
+      <div class="step-inline" style="margin-top:14px"><div class="num-circle">3</div><div>Scroll to bottom → click <strong>"Create Web Service"</strong></div></div>
+
+      <div class="info warn">
+        <div class="ic">⏳</div>
+        <div><strong>First build takes 8–15 minutes</strong> because it installs LibreOffice inside the container. This is normal! You'll see a build log streaming — wait for it to say <strong>"Your service is live"</strong>.</div>
+      </div>
+
+      <div class="screen">
+        <strong>✅ When done, note your backend URL — it looks like:</strong>
+        <code>https://pdf-backend-xxxx.onrender.com</code><br/>
+        Copy this URL — you'll need it in Steps 4 and 5.
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 4 — Deploy Collabora -->
+  <div class="step-card s4">
+    <div class="step-header">
+      <div class="step-num">4</div>
+      <div>
+        <div class="step-title">Deploy Collabora (the Editor)</div>
+        <div class="step-sub">The Word-like editing interface</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="step-inline"><div class="num-circle">1</div><div>Dashboard → <strong>"New +"</strong> → <strong>"Web Service"</strong></div></div>
+      <div class="step-inline"><div class="num-circle">2</div><div>Select your same <code>pdf-editor</code> repo → <strong>"Connect"</strong></div></div>
+
+      <h3>Fill in these settings:</h3>
+      <table>
+        <tr><th>Field</th><th>Value</th></tr>
+        <tr><td><strong>Name</strong></td><td><code>pdf-collabora</code></td></tr>
+        <tr><td><strong>Runtime</strong></td><td><strong>Docker</strong></td></tr>
+        <tr><td><strong>Dockerfile Path</strong></td><td><code>./collabora/Dockerfile</code></td></tr>
+        <tr><td><strong>Docker Context</strong></td><td><code>./collabora</code></td></tr>
+        <tr><td><strong>Plan</strong></td><td><span class="tag tag-free">Free</span></td></tr>
+      </table>
+
+      <h3>Add Environment Variables:</h3>
+      <div class="env-row"><div class="env-key">aliasgroup1</div><div class="env-val">Your backend URL from Step 3, e.g. <code>https://pdf-backend-xxxx.onrender.com</code></div></div>
+      <div class="env-row"><div class="env-key">DONT_GEN_SSL_CERT</div><div class="env-val"><code>YES</code></div></div>
+      <div class="env-row"><div class="env-key">extra_params</div><div class="env-val"><code>--o:ssl.enable=false --o:ssl.termination=true</code></div></div>
+
+      <div class="step-inline" style="margin-top:14px"><div class="num-circle">3</div><div>Click <strong>"Create Web Service"</strong> — wait for it to go live</div></div>
+
+      <div class="screen">
+        <strong>✅ When done, note your Collabora URL — it looks like:</strong>
+        <code>https://pdf-collabora-xxxx.onrender.com</code><br/>
+        Copy this URL — you'll need it in Step 5.
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 5 — Deploy Frontend + Update env vars -->
+  <div class="step-card s5">
+    <div class="step-header">
+      <div class="step-num">5</div>
+      <div>
+        <div class="step-title">Deploy Frontend & Update URLs</div>
+        <div class="step-sub">Connect everything together</div>
+      </div>
+    </div>
+    <div class="step-body">
+
+      <h3>A) Update Backend with the real URLs</h3>
+      <p>Now that you have both URLs, go back to your <strong>pdf-backend</strong> service on Render:</p>
+      <div class="step-inline"><div class="num-circle">1</div><div>Click on <strong>pdf-backend</strong> → click <strong>"Environment"</strong> tab on the left</div></div>
+      <div class="step-inline"><div class="num-circle">2</div><div>Update these two variables:</div></div>
+
+      <div class="env-row"><div class="env-key">BASE_URL</div><div class="env-val"><code>https://pdf-backend-xxxx.onrender.com</code> (your backend's own URL)</div></div>
+      <div class="env-row"><div class="env-key">COLLABORA_URL</div><div class="env-val"><code>https://pdf-collabora-xxxx.onrender.com</code> (your Collabora URL)</div></div>
+
+      <div class="step-inline" style="margin-top:10px"><div class="num-circle">3</div><div>Click <strong>"Save Changes"</strong> — backend will redeploy automatically (1–2 min)</div></div>
+
+      <h3>B) Deploy the Frontend</h3>
+      <div class="step-inline"><div class="num-circle">1</div><div>Dashboard → <strong>"New +"</strong> → <strong>"Web Service"</strong></div></div>
+      <div class="step-inline"><div class="num-circle">2</div><div>Select your <code>pdf-editor</code> repo → <strong>"Connect"</strong></div></div>
+
+      <table>
+        <tr><th>Field</th><th>Value</th></tr>
+        <tr><td><strong>Name</strong></td><td><code>pdf-frontend</code></td></tr>
+        <tr><td><strong>Runtime</strong></td><td><strong>Docker</strong></td></tr>
+        <tr><td><strong>Dockerfile Path</strong></td><td><code>./frontend/Dockerfile</code></td></tr>
+        <tr><td><strong>Docker Context</strong></td><td><code>./frontend</code></td></tr>
+        <tr><td><strong>Plan</strong></td><td><span class="tag tag-free">Free</span></td></tr>
+      </table>
+
+      <h3>Add Build Argument (not env var — it's a build arg):</h3>
+      <p>Click <strong>"Advanced"</strong> → look for <strong>"Build Arguments"</strong> section:</p>
+      <div class="env-row"><div class="env-key">VITE_API_URL</div><div class="env-val"><code>https://pdf-backend-xxxx.onrender.com</code></div></div>
+
+      <div class="step-inline" style="margin-top:14px"><div class="num-circle">3</div><div>Click <strong>"Create Web Service"</strong> — wait for build to finish</div></div>
+
+      <div class="screen">
+        <strong>✅ When done, your frontend URL looks like:</strong>
+        <code>https://pdf-frontend-xxxx.onrender.com</code><br/>
+        <strong>This is the link you share with everyone!</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 6 — Test -->
+  <div class="step-card s6">
+    <div class="step-header">
+      <div class="step-num">6</div>
+      <div>
+        <div class="step-title">Test Your Live App 🎉</div>
+        <div class="step-sub">Make sure everything works end to end</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <h3>Quick health check first</h3>
+      <p>Open this URL in your browser (replace with your real backend URL):</p>
+      <pre><code>https://pdf-backend-xxxx.onrender.com/api/health</code></pre>
+      <p>You should see: <code>{"ok":true}</code> — if yes, backend is working ✅</p>
+
+      <h3>Full test</h3>
+      <ul class="pl">
+        <li>Open your frontend URL: <code>https://pdf-frontend-xxxx.onrender.com</code></li>
+        <li>Upload a PDF file</li>
+        <li>Wait ~15–30 seconds for conversion (first time may be slower as service wakes up)</li>
+        <li>Click <strong>Open Editor</strong> — Collabora loads in the browser</li>
+        <li>Edit some text, then press <strong>Ctrl+S</strong> to save</li>
+        <li>Click <strong>Download PDF</strong> or <strong>Download DOCX</strong></li>
+      </ul>
+
+      <h3>Troubleshooting</h3>
+      <div class="info err">
+        <div class="ic">❌</div>
+        <div><strong>App is slow / not responding</strong> — Free tier sleeps after 15 min. First request after sleep takes 20–30 seconds to wake up. Just wait and refresh.</div>
+      </div>
+      <div class="info err">
+        <div class="ic">❌</div>
+        <div><strong>Editor doesn't open / blank screen</strong> — Check that <code>COLLABORA_URL</code> env var in the backend is set correctly. Go to pdf-backend → Environment → verify the URL matches your pdf-collabora service URL exactly.</div>
+      </div>
+      <div class="info err">
+        <div class="ic">❌</div>
+        <div><strong>Conversion fails</strong> — Check that <code>CONVERT_MODE=local</code> is set. Go to pdf-backend → Environment and verify it.</div>
+      </div>
+      <div class="info err">
+        <div class="ic">❌</div>
+        <div><strong>"Download PDF" says save first</strong> — You must press <strong>Ctrl+S</strong> inside the Collabora editor to trigger the save, then download.</div>
+      </div>
+      <div class="info tip">
+        <div class="ic">💡</div>
+        <div>To see live logs for any service: click the service on Render Dashboard → click <strong>"Logs"</strong> tab on the left sidebar. This shows exactly what's happening.</div>
+      </div>
+
+      <h3>Update your app in the future</h3>
+      <pre><code><span class="c"># Make changes to your code locally, then:</span>
+git add .
+git commit -m <span class="g">"Update description"</span>
+git push
+
+<span class="c"># Render automatically detects the push and redeploys!</span></code></pre>
+    </div>
+  </div>
+
+  <div class="final">
+    <h2>🎊 Your PDF Editor is Live on Render!</h2>
+    <p>Share <strong>https://pdf-frontend-xxxx.onrender.com</strong> with anyone.<br/>
+    They can upload PDFs, edit them like Word, and download as PDF or DOCX — all for free.</p>
+  </div>
+
+</div>
+</body>
+</html>

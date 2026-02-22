@@ -1,0 +1,60 @@
+services:
+
+  # ── Backend (Node.js + LibreOffice built-in) ─────────────────────────────────
+  - type: web
+    name: pdf-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: CONVERT_MODE
+        value: local
+      - key: DATA_DIR
+        value: /data
+      - key: CONVERT_TIMEOUT_MS
+        value: 180000
+      - key: BASE_URL
+        fromService:
+          type: web
+          name: pdf-backend
+          property: host
+          prepend: https://
+      - key: COLLABORA_URL
+        fromService:
+          type: web
+          name: pdf-collabora
+          property: host
+          prepend: https://
+
+  # ── Collabora Online (Word-like editor) ──────────────────────────────────────
+  - type: web
+    name: pdf-collabora
+    runtime: docker
+    dockerfilePath: ./collabora/Dockerfile
+    dockerContext: ./collabora
+    plan: free
+    envVars:
+      - key: aliasgroup1
+        fromService:
+          type: web
+          name: pdf-backend
+          property: host
+          prepend: https://
+
+  # ── Frontend (React + nginx) ──────────────────────────────────────────────────
+  - type: web
+    name: pdf-frontend
+    runtime: docker
+    dockerfilePath: ./frontend/Dockerfile
+    dockerContext: ./frontend
+    plan: free
+    buildArgs:
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: pdf-backend
+          property: host
+          prepend: https://
